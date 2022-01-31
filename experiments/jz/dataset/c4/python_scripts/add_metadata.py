@@ -8,7 +8,7 @@ from typing import Optional
 import datasets
 import hydra
 import wandb
-from datasets import Dataset, Features, config, load_dataset, load_from_disk
+from datasets import Dataset, Features, Value, config, load_dataset, load_from_disk
 from hydra.core.config_store import ConfigStore
 from omegaconf import OmegaConf
 
@@ -34,7 +34,7 @@ class PreprocessingConfig:
     task_id: int = field(metadata={"help": "The id of the task"})
     out_dir: str = field(metadata={"help": "where to save the resulting dataset."})
     num_files_to_process: int = field(metadata={"help": "the number of files to process"})
-    path_wiki_db: str = field(
+    path_wiki_db: Optional[str] = field(
         metadata={"help": "The path to the wikipedia database file necessary for the website descriptions"}
     )
     entity_path_data_dir: str = field(
@@ -79,7 +79,7 @@ class PreprocessingConfig:
     use_load_from_disk: bool = field(
         default=False,
         metadata={
-            "help": "If false, the program will load the dataset with `load_dataset` and if false, it will load it "
+            "help": "If false, the program will load the dataset with `load_dataset` and if true, it will load it "
             "with `load_from_disk`."
         },
     )
@@ -114,6 +114,76 @@ col_to_store_metadata_entities = "metadata_entity"
 col_to_store_metadata_generation_length_text = "metadata_generation_length_text"
 col_to_store_metadata_generation_length_sentence = "metadata_generation_length_sentence"
 col_to_store_metadata_datasource = "metadata_generation_datasource"
+
+
+features_dict = {
+    "HtmlPreprocessor_error": Value(dtype="int64", id=None),
+    "HtmlPreprocessor_error_comment": Value(dtype="string", id=None),
+    "c4_shard": Value(dtype="int64", id=None),
+    "c4_timestamp": Value(dtype="string", id=None),
+    "html": Value(dtype="string", id=None),
+    "html_footer": [Value(dtype="string", id=None)],
+    "html_head": [Value(dtype="string", id=None)],
+    "html_title": [Value(dtype="string", id=None)],
+    "metadata_generation_datasource": [
+        {
+            "key": Value(dtype="string", id=None),
+            "type": Value(dtype="string", id=None),
+            "value": Value(dtype="string", id=None),
+        }
+    ],
+    "metadata_generation_length_sentence": [
+        {
+            "char_end_idx": Value(dtype="int64", id=None),
+            "char_start_idx": Value(dtype="int64", id=None),
+            "key": Value(dtype="string", id=None),
+            "type": Value(dtype="string", id=None),
+            "value": Value(dtype="string", id=None),
+        }
+    ],
+    "metadata_generation_length_text": [
+        {
+            "key": Value(dtype="string", id=None),
+            "type": Value(dtype="string", id=None),
+            "value": Value(dtype="string", id=None),
+        }
+    ],
+    "metadata_html": [
+        {
+            "char_end_idx": Value(dtype="int64", id=None),
+            "char_start_idx": Value(dtype="int64", id=None),
+            "html_attrs": {"attrs": [Value(dtype="string", id=None)], "values": [Value(dtype="string", id=None)]},
+            "key": Value(dtype="string", id=None),
+            "relative_end_pos": Value(dtype="int64", id=None),
+            "relative_start_pos": Value(dtype="int64", id=None),
+            "type": Value(dtype="string", id=None),
+            "value": Value(dtype="string", id=None),
+        }
+    ],
+    "metadata_timestamp": [
+        {
+            "key": Value(dtype="string", id=None),
+            "type": Value(dtype="string", id=None),
+            "value": Value(dtype="string", id=None),
+        }
+    ],
+    "metadata_url": [
+        {
+            "key": Value(dtype="string", id=None),
+            "type": Value(dtype="string", id=None),
+            "value": Value(dtype="string", id=None),
+        }
+    ],
+    "metadata_website_desc": [
+        {
+            "key": Value(dtype="string", id=None),
+            "type": Value(dtype="string", id=None),
+            "value": Value(dtype="string", id=None),
+        }
+    ],
+    "text": Value(dtype="string", id=None),
+    "url": Value(dtype="string", id=None),
+}
 
 
 @hydra.main(config_name="preprocessing_config")
@@ -171,7 +241,6 @@ def main(args: PreprocessingConfig) -> None:  # Setup logging
         logger.info("   Entity...")
         entity_processor = EntityPreprocessor(
             base_url=args.entity_path_data_dir,
-            path_wiki_db=args.path_wiki_db,
             path_or_url_flair_ner_model=args.path_or_url_flair_ner_model,
             col_to_store_metadata=col_to_store_metadata_entities,
             col_text=col_to_store_text,
@@ -230,6 +299,7 @@ def main(args: PreprocessingConfig) -> None:  # Setup logging
                 args.dataset_name,
                 args.dataset_config_name,
                 data_files=data_files,
+                features=Features(features_dict),
                 cache_dir=args.cache_dir,
                 keep_in_memory=False,
                 download_mode="force_redownload",
@@ -237,7 +307,7 @@ def main(args: PreprocessingConfig) -> None:  # Setup logging
 
         metrics_logger.log({"load_dataset": 1})
 
-        features_dict = dict(ds.features)
+        # features_dict = dict(ds.features)
         logger.info(f"the initial features of the dataset are: {features_dict}")
 
         def apply_processor(ds: Dataset, processor: MetadataPreprocessor, remove_columns=None) -> Dataset:
