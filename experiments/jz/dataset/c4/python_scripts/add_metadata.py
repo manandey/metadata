@@ -76,6 +76,17 @@ class PreprocessingConfig:
         default=datasets.config.DEFAULT_MAX_BATCH_SIZE,
         metadata={"help": " Size of the batch to load in memory and write at once."},
     )
+    writer_batch_size: int = field(
+        default=datasets.config.DEFAULT_MAX_BATCH_SIZE,
+        metadata={"help": " Number of rows per write operation for the cache file writer."},
+    )
+    select_n_first_indices: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "The number of indices to process from the initial datasets. If None, the "
+            "whole dataset will be processed. Use for debugging purpose."
+        },
+    )
     use_load_from_disk: bool = field(
         default=False,
         metadata={
@@ -307,6 +318,10 @@ def main(args: PreprocessingConfig) -> None:  # Setup logging
 
         metrics_logger.log({"load_dataset": 1})
 
+        if args.select_n_first_indices:
+            logger.info(f"Extract the {args.select_n_first_indices} first indices from the dataset")
+            ds = ds.select([i for i in range(args.select_n_first_indices)])
+
         # features_dict = dict(ds.features)
         logger.info(f"the initial features of the dataset are: {features_dict}")
 
@@ -316,10 +331,15 @@ def main(args: PreprocessingConfig) -> None:  # Setup logging
                 features_dict[col_name] = feature_type
             extraction_name = processor.__class__.__name__
 
+            def wrap_process(examples):
+                examples = processor.preprocess(examples)
+                metrics_logger.log({extraction_name: 1})
+                return examples
+
             logger.info(f"Start {extraction_name}")
             metrics_logger.log({extraction_name: 0})
             ds = ds.map(
-                processor.preprocess,
+                wrap_process,
                 batched=True,
                 batch_size=args.map_batch_size,
                 num_proc=args.preprocessing_num_workers,
@@ -327,8 +347,9 @@ def main(args: PreprocessingConfig) -> None:  # Setup logging
                 desc=f"Running {extraction_name} on dataset",
                 features=Features(features_dict),
                 remove_columns=remove_columns,
+                writer_batch_size=args.writer_batch_size,
             )
-            metrics_logger.log({extraction_name: 1})
+            metrics_logger.log({extraction_name: 2})
             logger.info(f"End {extraction_name}")
             return ds
 
