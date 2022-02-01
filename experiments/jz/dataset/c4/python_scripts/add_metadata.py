@@ -332,8 +332,9 @@ def main(args: PreprocessingConfig) -> None:  # Setup logging
             extraction_name = processor.__class__.__name__
 
             def wrap_process(examples):
-                examples = processor.preprocess(examples)
                 metrics_logger.log({extraction_name: 1})
+                examples = processor.preprocess(examples)
+                metrics_logger.log({extraction_name: 2})
                 return examples
 
             logger.info(f"Start {extraction_name}")
@@ -349,7 +350,7 @@ def main(args: PreprocessingConfig) -> None:  # Setup logging
                 remove_columns=remove_columns,
                 writer_batch_size=args.writer_batch_size,
             )
-            metrics_logger.log({extraction_name: 2})
+            metrics_logger.log({extraction_name: 3})
             logger.info(f"End {extraction_name}")
             return ds
 
