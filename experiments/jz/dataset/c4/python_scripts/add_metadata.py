@@ -94,6 +94,13 @@ class PreprocessingConfig:
             "with `load_from_disk`."
         },
     )
+    max_num_chars_entities:  Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "Maximun number of characters an exemple can have to extract its entities"
+        },
+
+    )
 
 
 class Logger:
@@ -251,6 +258,7 @@ def main(args: PreprocessingConfig) -> None:  # Setup logging
     if "entity" in args.metadata_to_include:
         logger.info("   Entity...")
         entity_processor = EntityPreprocessor(
+            num_chars=args.max_num_chars_entities,
             base_url=args.entity_path_data_dir,
             path_or_url_flair_ner_model=args.path_or_url_flair_ner_model,
             col_to_store_metadata=col_to_store_metadata_entities,
