@@ -341,7 +341,7 @@ class EntityPreprocessor(
         processed = {
             ex_id: [ex_text, []]
             for ex_id, ex_text in enumerate(examples[self.col_text])
-            if self.max_num_chars is not None and len(ex_text) <= self.max_num_chars
+            if self.max_num_chars is None or len(ex_text) <= self.max_num_chars
         }
         return processed
 
