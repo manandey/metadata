@@ -302,7 +302,7 @@ class EntityPreprocessor(
     def __init__(
         self,
         base_url,
-        num_chars=5000,  # default length of text set as threshold to include an example in a batch
+        # num_chars=5000,  # default length of text set as threshold to include an example in a batch
         path_or_url_flair_ner_model="ner-fast",
         col_to_store_metadata="metadata",
         col_text="text",
@@ -316,7 +316,7 @@ class EntityPreprocessor(
             "model_path": "ed-wiki-2019",
         }
         self.model = EntityDisambiguation(self.base_url, self.wiki_version, self.config, reset_embeddings=True)
-        self.num_chars = num_chars
+        # self.num_chars = num_chars
         self.col_text = col_text
         super().__init__(col_to_store_metadata=col_to_store_metadata)
 
@@ -340,7 +340,7 @@ class EntityPreprocessor(
         processed = {
             ex_id: [ex_text, []]
             for ex_id, ex_text in enumerate(examples[self.col_text])
-            if len(ex_text) <= self.num_chars
+            # if len(ex_text) <= self.num_chars
         }
         return processed
 
@@ -348,9 +348,7 @@ class EntityPreprocessor(
         # fetch mention predictions for all the examples in a particular batch at once.
         input_text = self.preprocess_example(examples)
         mentions_dataset, n_mentions = self.mention_detection.find_mentions(input_text, self.tagger_ner)
-        predictions, timing = self.model.predict(mentions_dataset)
-        result = process_results(mentions_dataset, predictions, input_text)
-        return result
+        return mentions_dataset
 
     def preprocess(self, examples: Dict[str, List]) -> Dict[str, List]:
         # process all the examples in a particular batch and all the metadata extracted for entities for those examples
@@ -369,12 +367,10 @@ class EntityPreprocessor(
             # fetch all the elements for which entity tags are present by mapping through "id"
             mentions_predicted_for_id = mentions_predicted[example_id]
             for mention_predicted in mentions_predicted_for_id:
-                # element at index = 3 in the result list corresponds to the predicted entity
-                entity = mention_predicted[3]
-                # element at index = 0 in the result list corresponds to the char start ind
-                char_start_idx = mention_predicted[0]
-                # element at index = 1 in the result list corresponds to length of the entity
-                char_end_idx = mention_predicted[0] + mention_predicted[1]
+
+                entity = mention_predicted["mention"]
+                char_start_idx = mention_predicted["pos"]
+                char_end_idx = mention_predicted["end_pos"]
 
                 en = {
                     "key": "entity",
