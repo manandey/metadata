@@ -144,8 +144,8 @@ class MetadataConfig:
         metadata={"help": "The character sequence to be concatenated at the beginning of the metadata prefix."},
     )
     entity_setting: str = field(
-        default="normal",
-        metadata={"help": "The settings in which you want to use entites. Valid choices: (beg, end, normal)"},
+        default="beg",
+        metadata={"help": "The settings in which you want to use entites_paragraph. Valid choices: (beg, end)"},
     )
     local_metadata_special_token_start: Optional[Dict[str, str]] = field(
         default=None,
