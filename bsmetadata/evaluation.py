@@ -132,7 +132,7 @@ if __name__ == "__main__":
     # Validation datasets
     dataset_paths = [
         "bs-modeling-metadata/c4-en-html-with-validation_metadata_html",
-        "bs-modeling-metadata/c4-en-html-with-validation_metadata_entity",
+        # "bs-modeling-metadata/c4-en-html-with-validation_metadata_entity",
         "bs-modeling-metadata/c4-en-html-with-validation_metadata_entity_paragraph",
         "bs-modeling-metadata/c4-en-html-with-validation_metadata_website_desc",
         "bs-modeling-metadata/c4-en-html-with-validation_metadata_generation_datasource",
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         "bs-modeling-metadata/c4-en-html-with-validation_metadata_generation_length_sentence",
         "bs-modeling-metadata/c4-en-html-with-validation_metadata_generation_length_text",
         "bs-modeling-metadata/c4-en-html-with-validation_metadata_url",
-        "bs-modeling-metadata/c4-en-html-with-validation_metadata_paragraph",
+        # "bs-modeling-metadata/c4-en-html-with-validation_metadata_paragraph",
     ]
 
     for path in dataset_paths:
