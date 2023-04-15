@@ -419,7 +419,7 @@ if __name__ == "__main__":
             # rich.print(f"{normal_example['attention_mask']=}")
             # import sys
             # sys.exit()
-            # print(metadata_example)
+            print(metadata_example)
             if "input_ids" not in metadata_example:
                 print("Skipping")
                 continue
